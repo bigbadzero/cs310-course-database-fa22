@@ -6,7 +6,7 @@ public class Main {
 
     public static void main(String[] args) {
         
-        Database db = new Database("cs310_p2_user", "P2!user", "localhost");
+        Database db = new Database("root", "password", "localhost");
         
         if (db.isConnected())
             

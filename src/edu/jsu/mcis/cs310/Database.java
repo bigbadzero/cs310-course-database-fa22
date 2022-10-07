@@ -9,6 +9,11 @@ public class Database {
     private final Connection connection;
     
     private final int TERMID_SP22 = 1;
+    ResultSet resultset = null;
+    ResultSetMetaData metadata;
+    int columnCount;
+    PreparedStatement pstSelect = null, pstUpdate = null;
+    boolean hasresults;
     
     /* CONSTRUCTOR */
 
@@ -25,7 +30,24 @@ public class Database {
         String result = null;
         
         // INSERT YOUR CODE HERE
-        
+
+        try{
+            String query = "SELECT * FROM section WHERE subjectid = '" + subjectid + "' AND num = " + num + " and termid = " + termid;
+            pstSelect = connection.prepareStatement(query);
+            hasresults = pstSelect.execute();
+
+            if (hasresults) {
+                resultset = pstSelect.getResultSet();
+                result = getResultSetAsJSON(resultset);
+            }
+            else {
+                result = "No Data Found";
+            }
+
+
+        }
+        catch (Exception e) { e.printStackTrace(); }
+
         return result;
         
     }
@@ -143,33 +165,63 @@ public class Database {
         return c;
         
     }
-    
+
     private String getResultSetAsJSON(ResultSet resultset) {
-        
+
         String result;
-        
+
         /* Create JSON Containers */
-        
+
         JSONArray json = new JSONArray();
         JSONArray keys = new JSONArray();
-        
+
         try {
-            
+
             /* Get Metadata */
-        
+
             ResultSetMetaData metadata = resultset.getMetaData();
             int columnCount = metadata.getColumnCount();
-            
+
             // INSERT YOUR CODE HERE
-        
+            for (int i = 1; i <= columnCount; ++i) {
+
+                keys.add(metadata.getColumnLabel(i));
+
+            }
+
+            /* Get ResultSet Data */
+
+            while(resultset.next()) {
+
+                /* Create JSON Container for New Row */
+
+                JSONObject row = new JSONObject();
+
+                /* Get Row Data */
+
+                for (int i = 1; i <= columnCount; ++i) {
+
+                    /* Get Value; Pair with Key */
+
+                    Object value = resultset.getObject(i);
+                    row.put(keys.get(i - 1), String.valueOf(value));
+
+                }
+
+                /* Add Row Data to Collection */
+
+                json.add(row);
+
+            }
+
         }
         catch (Exception e) { e.printStackTrace(); }
-        
+
         /* Encode JSON Data and Return */
-        
+
         result = JSONValue.toJSONString(json);
         return result;
-        
+
     }
     
 }
